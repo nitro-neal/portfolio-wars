@@ -1,0 +1,172 @@
+import React from "react";
+import tokenContractsJson from "./tokens.json";
+import { Chart } from "react-google-charts";
+
+
+// doc - https://github.com/ethereum/wiki/wiki/JavaScript-API
+// token images - https://github.com/TrustWallet/tokens
+// bit list of contracts - https://github.com/kvhnuke/etherwallet/blob/mercury/app/scripts/tokens/ethTokens.json
+class ReadCoins extends React.Component {
+  state = { mydata: [] };
+  
+  componentDidMount() {
+    const { drizzle, drizzleState } = this.props;
+    
+    let minABI = [
+        // balanceOf
+        {
+          "constant":true,
+          "inputs":[{"name":"_owner","type":"address"}],
+          "name":"balanceOf",
+          "outputs":[{"name":"balance","type":"uint256"}],
+          "type":"function"
+        },
+        // decimals
+        {
+          "constant":true,
+          "inputs":[],
+          "name":"decimals",
+          "outputs":[{"name":"","type":"uint8"}],
+          "type":"function"
+        }
+      ];
+    
+    function getTokenBalanceRecursive(index, coinsWithValue, that) {
+        if(index >= tokenContractsJson.length) {
+
+            console.log(coinsWithValue);
+            const mydata = coinsWithValue;
+            that.setState( {mydata} )
+
+            return;
+        }
+
+        var symbol = tokenContractsJson[index].symbol;
+        var symbolTokenAddress = tokenContractsJson[index].address;
+        console.log(symbol + " -> "  + symbolTokenAddress);
+
+        let tokenContract = new drizzle.web3.eth.Contract(minABI, symbolTokenAddress);
+
+        drizzle.web3.eth.call({
+            to: symbolTokenAddress,
+            data: tokenContract.methods.balanceOf(drizzleState.accounts[0]).encodeABI()
+        }).then(balance => {
+            //console.log(drizzle.web3.utils.toBN(balance).toString())
+            drizzle.web3.eth.call({
+                to: symbolTokenAddress,
+                data: tokenContract.methods.decimals().encodeABI()
+            }).then(decimals => {
+                //console.log(drizzle.web3.utils.toBN(decimals).toString())
+                var smallNum = drizzle.web3.utils.toBN(10).pow(drizzle.web3.utils.toBN(decimals))
+                var finalTokenAmount = drizzle.web3.utils.toBN(balance).div(smallNum)
+    
+                //const mydata = finalTokenAmount.toString();
+                //this.setState( {mydata} )
+                
+                console.log(finalTokenAmount.toString());
+
+                if(parseFloat(finalTokenAmount.toString()) > 0.0000001) {
+                    console.log("IN BLANCE")
+                    coinsWithValue.push(symbol + " -> " + finalTokenAmount.toString());
+                }
+
+                var newIndex = index + 1;
+                getTokenBalanceRecursive(newIndex,coinsWithValue, that)
+            })
+        })
+    }
+
+    function getTokenBalanceWithLoop(that) {
+        //var coinsWithValue = [];
+        for(var i = 0; i < tokenContractsJson.length; i++) {
+            var symbol = tokenContractsJson[i].symbol;
+            var symbolTokenAddress = tokenContractsJson[i].address;
+            console.log(symbol + " -> "  + symbolTokenAddress);
+
+            let tokenContract = new drizzle.web3.eth.Contract(minABI, symbolTokenAddress);
+
+            drizzle.web3.eth.call({
+                to: symbolTokenAddress,
+                data: tokenContract.methods.balanceOf(drizzleState.accounts[0]).encodeABI()
+            }).then(balance => {
+                //console.log(drizzle.web3.utils.toBN(balance).toString())
+                drizzle.web3.eth.call({
+                    to: symbolTokenAddress,
+                    data: tokenContract.methods.decimals().encodeABI()
+                }).then(decimals => {
+                    //console.log(drizzle.web3.utils.toBN(decimals).toString())
+                    var smallNum = drizzle.web3.utils.toBN(10).pow(drizzle.web3.utils.toBN(decimals))
+                    var finalTokenAmount = drizzle.web3.utils.toBN(balance).div(smallNum)
+        
+                    //const mydata = finalTokenAmount.toString();
+                    //this.setState( {mydata} )
+                    
+                    console.log(finalTokenAmount.toString());
+
+                    if(parseFloat(finalTokenAmount.toString()) > 0.0000001) {
+                        console.log("IN BLANCE")
+                        //coinsWithValue.push(symbol + " -> " + finalTokenAmount.toString());   
+                        // const mydata = that.state.mydata + symbol + " -> " + finalTokenAmount.toString()
+                        //const mydata = that.state.mydata.push(symbol + " -> " + finalTokenAmount.toString())
+                        //that.setState( {mydata} )
+                        // WORKS..
+                        //that.setState({ mydata: [...that.state.mydata, symbol + " -> " + finalTokenAmount.toString()] });
+                        console.log(symbol + " -> "  + finalTokenAmount.toString());
+                        var arrayToAdd = [];
+                        arrayToAdd.push(symbol);
+                        arrayToAdd.push(parseFloat(finalTokenAmount.toString()));
+                        that.setState({ mydata: [...that.state.mydata, arrayToAdd] });
+
+                        console.log(that.state.mydata);
+
+                        
+                    }
+                })
+            })
+        }
+
+        function web3Call() {
+            
+        }
+
+        //return coinsWithValue;
+    }
+
+    // var coinsWithValue = [];
+    // getTokenBalanceRecursive(0,coinsWithValue, this);
+
+    getTokenBalanceWithLoop(this);
+    // const mydata = coinsWithValue;
+    // this.setState( {mydata} )
+  }
+
+  render() {
+   
+    // if it exists, then we display its value
+    return (
+    <div>
+    <p>My coins: {this.state.mydata}</p>;
+    <Chart
+        width={'500px'}
+        height={'300px'}
+        chartType="PieChart"
+        loader={<div>Loading Chart</div>}
+        data={[
+            ['Coins', 'Amount'],
+            ['Work', 11],
+            ['Eat', 2],
+            ['Commute', 2],
+            ['Watch TV', 2],
+            ['Sleep', 7],
+        ]}
+        options={{
+            title: 'My Daily Activities',
+        }}
+        rootProps={{ 'data-testid': '1' }}
+        />
+    </div>
+    )
+  }
+}
+
+export default ReadCoins;
