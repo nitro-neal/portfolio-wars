@@ -1,5 +1,6 @@
 import React from "react";
 import tokenContractsJson from "./tokens.json";
+import coinPricesJson from "./coinmarketcap-2018-7-31-19.json"
 import { Chart } from "react-google-charts";
 
 
@@ -7,10 +8,12 @@ import { Chart } from "react-google-charts";
 // token images - https://github.com/TrustWallet/tokens
 // bit list of contracts - https://github.com/kvhnuke/etherwallet/blob/mercury/app/scripts/tokens/ethTokens.json
 class ReadCoins extends React.Component {
-  state = { mydata: [] };
+  //state = { mydata: [['Coins', 'Amount'], ['bat', 11],['btc', 43]] };
+  state = { mydata: [['Coins', 'Amount']], myIdealBalance: [['Coins', 'Amount'], ['ETH', 100.0],['BAT',50.0]] };
   
   componentDidMount() {
     const { drizzle, drizzleState } = this.props;
+    var coinPriceMap = new Map();
     
     let minABI = [
         // balanceOf
@@ -30,7 +33,14 @@ class ReadCoins extends React.Component {
           "type":"function"
         }
       ];
-    
+      
+    function getCoinPrices() {
+        console.log(coinPricesJson)
+        for(var i = 0; i < coinPricesJson.length; i++) {
+            coinPriceMap.set(coinPricesJson[i].symbol, parseFloat(coinPricesJson[i].price_usd));
+        }
+    }
+
     function getTokenBalanceRecursive(index, coinsWithValue, that) {
         if(index >= tokenContractsJson.length) {
 
@@ -77,14 +87,16 @@ class ReadCoins extends React.Component {
     }
 
     function getTokenBalanceWithLoop(that) {
-        //var coinsWithValue = [];
         for(var i = 0; i < tokenContractsJson.length; i++) {
             var symbol = tokenContractsJson[i].symbol;
             var symbolTokenAddress = tokenContractsJson[i].address;
             console.log(symbol + " -> "  + symbolTokenAddress);
 
             let tokenContract = new drizzle.web3.eth.Contract(minABI, symbolTokenAddress);
+            web3Call(symbol,symbolTokenAddress,tokenContract)
+        }
 
+        function web3Call(symbol,symbolTokenAddress,tokenContract) {
             drizzle.web3.eth.call({
                 to: symbolTokenAddress,
                 data: tokenContract.methods.balanceOf(drizzleState.accounts[0]).encodeABI()
@@ -97,47 +109,27 @@ class ReadCoins extends React.Component {
                     //console.log(drizzle.web3.utils.toBN(decimals).toString())
                     var smallNum = drizzle.web3.utils.toBN(10).pow(drizzle.web3.utils.toBN(decimals))
                     var finalTokenAmount = drizzle.web3.utils.toBN(balance).div(smallNum)
-        
-                    //const mydata = finalTokenAmount.toString();
-                    //this.setState( {mydata} )
-                    
+                
                     console.log(finalTokenAmount.toString());
 
                     if(parseFloat(finalTokenAmount.toString()) > 0.0000001) {
                         console.log("IN BLANCE")
-                        //coinsWithValue.push(symbol + " -> " + finalTokenAmount.toString());   
-                        // const mydata = that.state.mydata + symbol + " -> " + finalTokenAmount.toString()
-                        //const mydata = that.state.mydata.push(symbol + " -> " + finalTokenAmount.toString())
-                        //that.setState( {mydata} )
-                        // WORKS..
-                        //that.setState({ mydata: [...that.state.mydata, symbol + " -> " + finalTokenAmount.toString()] });
+                        
                         console.log(symbol + " -> "  + finalTokenAmount.toString());
                         var arrayToAdd = [];
                         arrayToAdd.push(symbol);
-                        arrayToAdd.push(parseFloat(finalTokenAmount.toString()));
+                        arrayToAdd.push(parseFloat(finalTokenAmount.toString()) * coinPriceMap.get(symbol));
                         that.setState({ mydata: [...that.state.mydata, arrayToAdd] });
 
-                        console.log(that.state.mydata);
-
-                        
+                        console.log(that.state.mydata);   
                     }
                 })
             })
         }
-
-        function web3Call() {
-            
-        }
-
-        //return coinsWithValue;
     }
 
-    // var coinsWithValue = [];
-    // getTokenBalanceRecursive(0,coinsWithValue, this);
-
+    getCoinPrices();
     getTokenBalanceWithLoop(this);
-    // const mydata = coinsWithValue;
-    // this.setState( {mydata} )
   }
 
   render() {
@@ -151,18 +143,38 @@ class ReadCoins extends React.Component {
         height={'300px'}
         chartType="PieChart"
         loader={<div>Loading Chart</div>}
-        data={[
-            ['Coins', 'Amount'],
-            ['Work', 11],
-            ['Eat', 2],
-            ['Commute', 2],
-            ['Watch TV', 2],
-            ['Sleep', 7],
-        ]}
+        // data={[
+        //     ['Coins', 'Amount'],
+        //     ['Work', 11],
+        //     ['Eat', 2],
+        //     ['Commute', 2],
+        //     ['Watch TV', 2],
+        //     ['Sleep', 7],
+        // ]}
+        data={this.state.mydata}
         options={{
             title: 'My Daily Activities',
         }}
         rootProps={{ 'data-testid': '1' }}
+        />
+        <Chart
+        width={'500px'}
+        height={'300px'}
+        chartType="PieChart"
+        loader={<div>Loading Chart</div>}
+        // data={[
+        //     ['Coins', 'Amount'],
+        //     ['Work', 11],
+        //     ['Eat', 2],
+        //     ['Commute', 2],
+        //     ['Watch TV', 2],
+        //     ['Sleep', 7],
+        // ]}
+        data={this.state.myIdealBalance}
+        options={{
+            title: 'My Ideal Chart',
+        }}
+        rootProps={{ 'data-testid': '2' }}
         />
     </div>
     )
