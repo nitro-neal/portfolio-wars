@@ -4,6 +4,7 @@ import './App.css';
 import ReadString from "./ReadString";
 import SetString from "./SetString";
 import ReadCoins from "./ReadCoins";
+import PortfolioManager from "./PortfolioManager"
 
 
 class App extends Component {
@@ -33,7 +34,7 @@ class App extends Component {
     if (this.state.loading) return "Loading Drizzle...";
     return (
       <div className="App">
-        <ReadString
+        {/* <ReadString
           drizzle={this.props.drizzle}
           drizzleState={this.state.drizzleState}
         />
@@ -44,7 +45,8 @@ class App extends Component {
         <ReadCoins
           drizzle={this.props.drizzle}
           drizzleState={this.state.drizzleState}
-        />
+        /> */}
+        <PortfolioManager/>
       </div>
     );
   }
