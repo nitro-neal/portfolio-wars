@@ -14,27 +14,30 @@ var that;
 function MySlider(props) {
     return (
         <div style={wrapperStyle}>
-            <p>{props.sliderData.symbol}</p>
-            <Slider min={0} max={100} defaultValue={3} onChange={props.onHandle}/>
+            <p>{props.sliderData.symbol} => {props.sliderData.value}%</p>
+            <p>{props.value}</p>
+            <Slider min={0} max={100} defaultValue={5} onChange={props.onHandle} onAfterChange={props.onAfterChange}/>
         </div>
-    );
-}
-
-function MyButton(props) {
-    return (
-        <div>
-            <button onClick={props.onAddNewCoinButton} />
-        </div>
-        
     );
 }
 
 function MyChart(props) {
     var chartData =  [['Coins', 'Amount']];
+
+    var nothingValue = 100;
+    for(var i = 0; i < props.sliders.length; i++) { 
+        nothingValue -= props.sliders[i].value;
+    }
+
+    var nothingElement = ['NOTHING', nothingValue];
+    chartData.push(nothingElement);
+
     for(var i = 0; i < props.sliders.length; i++) {
+        
         var newElement = []
         newElement.push(props.sliders[i].symbol);
         newElement.push(props.sliders[i].value);
+        
         chartData.push(newElement);
     }
 
@@ -64,10 +67,11 @@ class PortfolioManager extends React.Component {
             [
                 {
                     "id":1,
-                    "symbol":"NOTHING",
-                    "value":100
+                    "symbol":"ETH",
+                    "value":5
                 }
-            ]
+            ], 
+            sliderComponent : []
         }
     }
 
@@ -84,6 +88,9 @@ class PortfolioManager extends React.Component {
             };
 
           this.setState({ sliderData: [...this.state.sliderData, newElement] });
+          
+          // TODO ADD COMPONENT HERE
+          //this.sliderStates.push({})
         }
       };
 
@@ -92,28 +99,53 @@ class PortfolioManager extends React.Component {
         that = this;
     }
 
-    doStateStuff = (index, value) => {        
+    doStateStuff = (index, value, sliderObject) => {        
         var newSliderElemnt = this.state.sliderData[index];
         newSliderElemnt.value = value;
 
         var overallSliderData = this.state.sliderData;
         overallSliderData[index] = newSliderElemnt;
 
-        this.setState({sliderData:overallSliderData})
+        var overallPercentage = 0;
+
+        for(var i = 0; i<this.state.sliderData.length; i ++) {
+            overallPercentage += this.state.sliderData[i].value
+        }
+
+        if(overallPercentage <= 100) {
+            this.setState({sliderData:overallSliderData})
+        } else {
+            //reset slider..
+            //sliderObject.
+            //this.setState({sliderData:overallSliderData})
+        }
+
+        // this.setState({sliderData:overallSliderData})
+    }
+
+    onAfterChange = (value, sliderObject) => {
+        //TOOD: fix validation 
+        console.log("ON AFTER CHANGE" + sliderObject[0]);
+        console.log("ON AFTER CHANGE" +  value);
+        //console.log("slider comp" + globSliders);
     }
 
     render() {
+        var sliderObjects = [];
         return (
             <div>
                 <MyChart sliders = {this.state.sliderData}/>
-
-                <input type="text" onKeyDown={this.handleKeyDown} />
                 
+                <input type="text" onKeyDown={this.handleKeyDown} />
                 {this.state.sliderData.map(function(object, i) {
-                    return <MySlider key = {i} sliderData={object} onHandle={function handleSliderChangeNew(value) {
+                    var a = <MySlider key = {i} sliderData={object} onAfterChange={function(value){that.onAfterChange(value, sliderObjects)}} onHandle={function handleSliderChangeNew(value) {
                         console.log("Slider Change -" + value + " with index " + i);
                         that.doStateStuff(i, value);
+                        console.log(this);
                     }}/>
+                    sliderObjects.push(a);
+                    return a;
+                    
                 })}
             </div>
         )
