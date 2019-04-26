@@ -1,0 +1,14 @@
+[
+    {
+      "address": "0xDb0040451F373949A4Be60dcd7b6B8D6E42658B6",
+      "symbol": "BAT",
+      "decimal": 18,
+      "type": "default"
+    },
+    {
+      "address": "0xaD6D458402F60fD3Bd25163575031ACDce07538D",
+      "symbol": "DAI",
+      "decimal": 18,
+      "type": "default"
+    }
+  ]

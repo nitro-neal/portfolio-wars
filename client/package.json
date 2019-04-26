@@ -4,11 +4,13 @@
   "private": true,
   "dependencies": {
     "drizzle": "^1.4.0",
+    "web3": "^1.0.0-beta.52",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-scripts": "2.1.8",
     "react-google-charts": "^3.0.11",
-    "rc-slider": "^8.6.9"
+    "rc-slider": "^8.6.9",
+    "node-fetch": "^2.3.0"
   },
   "scripts": {
     "start": "react-scripts start",

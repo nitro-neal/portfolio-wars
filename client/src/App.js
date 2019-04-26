@@ -5,6 +5,10 @@ import ReadString from "./ReadString";
 import SetString from "./SetString";
 import ReadCoins from "./ReadCoins";
 import PortfolioManager from "./PortfolioManager"
+import ZeroXIntegration from './ZeroXIntegration';
+import KyberIntegration from './KyberIntegration';
+import KyberBatchIntegration from './KyberBatchIntegration';
+import EasyPortfolio from './EasyPortfolio';
 
 
 class App extends Component {
@@ -46,7 +50,23 @@ class App extends Component {
           drizzle={this.props.drizzle}
           drizzleState={this.state.drizzleState}
         /> */}
-        <PortfolioManager/>
+
+
+        {/* <PortfolioManager/> */}
+        {/* <KyberIntegration
+          drizzle={this.props.drizzle}
+          drizzleState={this.state.drizzleState}
+        /> */}
+        {/* <KyberBatchIntegration
+          drizzle={this.props.drizzle}
+          drizzleState={this.state.drizzleState}
+        /> */}
+
+        <EasyPortfolio
+          drizzle={this.props.drizzle}
+          drizzleState={this.state.drizzleState}
+        />
+        
       </div>
     );
   }
