@@ -9,6 +9,7 @@ import ZeroXIntegration from './ZeroXIntegration';
 import KyberIntegration from './KyberIntegration';
 import KyberBatchIntegration from './KyberBatchIntegration';
 import EasyPortfolio from './EasyPortfolio';
+import PortfolioContainer from './reacty/PortfolioContainer';
 
 
 class App extends Component {
@@ -62,7 +63,12 @@ class App extends Component {
           drizzleState={this.state.drizzleState}
         /> */}
 
-        <EasyPortfolio
+        {/* <EasyPortfolio
+          drizzle={this.props.drizzle}
+          drizzleState={this.state.drizzleState}
+        /> */}
+
+        <PortfolioContainer
           drizzle={this.props.drizzle}
           drizzleState={this.state.drizzleState}
         />

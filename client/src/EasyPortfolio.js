@@ -13,12 +13,54 @@ import coinPricesJson from "./coinmarketcap-2018-7-31-19.json"
 const Handle = Slider.Handle;
 const wrapperStyle = { width: 400, margin: 50 };
 
+
+function calcPercentages(data) {
+  console.log('CALC PERCENT' + data)
+
+  var returnPercents = [];
+  var totalUsdValue = 0;
+  for(var i = 1; i < data.length; i ++) {
+    totalUsdValue += parseFloat(data[i][1]);
+  }
+
+  console.log('total usd valu' + totalUsdValue)
+
+  for(var j = 1; j < data.length; j ++) {
+    var usdValue = parseFloat(data[j][1]);
+    returnPercents.push((usdValue/totalUsdValue) * 100.0);
+  }
+
+  return returnPercents;
+}
+
+function MySlider(props) {
+  console.log("myslider.. percent.. " + props.percent)
+
+  //var tokenPercents = calcPercentages(props.mydata)
+  //cons
+
+  return (
+      <div style={wrapperStyle}>
+          <p>{props.symbol} => {Math.round(props.percent)}%</p>
+          <p>{props.value}</p>
+          <Slider min={0} max={100} defaultValue={props.percent} onChange={props.onHandle} onAfterChange={props.onAfterChange}/>
+      </div>
+  );
+}
+
+function createNewAsset(symbol, amount, usdValue, currentPortfolioPercent, newPortfolioPercent) {
+  return {"symbol" : symbol, "amount" : amount, "usdValue": usdValue, "currentPortfolioPercent" : currentPortfolioPercent, "newPortfolioPercent" : newPortfolioPercent}
+}
+
 class EasyPortfolio extends React.Component {
-  state = { mydata: [['Coins', 'Amount']] };
+
+  //state = { mydata: [['Coins', 'Amount']] };
+  state = { myAssets: []}
   
   componentDidMount() {
     const { drizzle, drizzleState } = this.props;
     var coinPriceMap = new Map();
+
     let minABI = [
         // balanceOf
         {
@@ -49,6 +91,7 @@ class EasyPortfolio extends React.Component {
 
       //first get eth balance
       var balance = drizzleState.accountBalances[drizzleState.accounts[0]]
+      console.log('bal' + balance)
       var ethBalance = drizzle.web3.utils.fromWei(balance, 'ether');
     
       var arrayToAdd = [];
@@ -90,6 +133,8 @@ class EasyPortfolio extends React.Component {
                   var arrayToAdd = [];
                   arrayToAdd.push(symbol);
                   arrayToAdd.push(parseFloat(finalTokenAmount.toString()) * coinPriceMap.get(symbol));
+
+                  
                   that.setState({ mydata: [...that.state.mydata, arrayToAdd] });
 
                   console.log(that.state.mydata);
@@ -103,6 +148,11 @@ class EasyPortfolio extends React.Component {
   }
 
   render() {
+
+    // var mydata = this.state.mydata;
+    console.log("my data erase pos " + this.state.mydata)
+    var percents = calcPercentages(this.state.mydata)
+    console.log('percetns! ' + percents)
     return (
         <div>
             <div>
@@ -118,6 +168,22 @@ class EasyPortfolio extends React.Component {
                     rootProps={{ 'data-testid': '1' }}
                     />
             </div>
+
+            <div> 
+              {this.state.mydata.map(function(object, i, arr) {
+
+                if(i == 0) {
+                  return <p></p>
+                }
+                console.log('ARR? ' + arr);
+                  
+                  var a = <MySlider key = {i} symbol = {object[0]} percent={percents[i-1]} sliderData={object} onAfterChange={function(value){console.log(value)}} onHandle={function handleSliderChangeNew(value) {
+                    console.log("Slider Change -" + value + " with index " + i);
+                    //that.doStateStuff(i, value);
+                }}/>
+                return a;
+              })}
+          </div>
         </div>
     )
   }
