@@ -15,7 +15,6 @@ class AssetSlider extends React.Component {
 
     render() {
         return (
-
             <div>
                 {this.props.assets.map((asset) => {
                     var computedValue = asset.currentPortfolioPercent;                    

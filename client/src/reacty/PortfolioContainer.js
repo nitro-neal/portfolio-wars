@@ -1,9 +1,13 @@
 import React from 'react';
+// import Button from 'react-bootstrap/Button';
+
 import ShowPieChart from './PieChart';
 import coinPricesJson from "./../coinmarketcap-2018-7-31-19.json"
 // import tokenContractsJson from "./../tokens.json";
 import tokenContractsJson from "./../testnetTokens.json";
+
 import {getCoinPrices, getCurrentAssets} from "./Helpers"
+import {startTrade} from "./KyberInterface"
 import AssetSlider from './AssetSlider';
 
 
@@ -15,13 +19,17 @@ class PortfolioContainer extends React.Component {
   
       this.state = {
         assets: [],
-        coinPricesMap : {}
+        coinPricesMap : {},
+        drizzle : {},
+        drizzleState : {}
       }
     }
     
     componentDidMount() {
         const { drizzle, drizzleState } = this.props;
-
+        this.setState({ drizzle: drizzle });
+        this.setState({ drizzleState: drizzleState });
+        
         var recentCoinPricesMap = getCoinPrices(coinPricesJson);
         this.setState({coinPricesMap :recentCoinPricesMap })
 
@@ -71,12 +79,21 @@ class PortfolioContainer extends React.Component {
         this.setState({ assets: this.state.assets });
     }
 
+    startKyberTrade = () => {
+      console.log('trade start');
+      console.log('STATE? ' + this.state.drizzleState)
+      startTrade(this.state.drizzleState, this.state.drizzle);
+    }
+
     render() {
       return (
         <div>
           <h3> Portfolio Container  </h3>
           <ShowPieChart assets = {this.state.assets} />
           <AssetSlider changeSlider = {this.changeSlider} assets = {this.state.assets} />
+          <button onClick={this.startKyberTrade}>
+            Start Trade!
+          </button>
         </div>
       )
     }
