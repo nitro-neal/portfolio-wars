@@ -155,6 +155,37 @@ async function executeTrade(walletAddress,srcToken,dstToken,srcQty,minDstQty,gas
   return rawTx;
 }
 
+//Other helper functions
+async function getSupportedTokens() {
+  let tokensBasicInfoRequest = await fetch(NETWORK_URL + '/currencies')
+  let tokensBasicInfo = await tokensBasicInfoRequest.json()
+  console.log(tokensBasicInfo)
+  return tokensBasicInfo;
+}
+
+async function getMarketInfo() {
+  let marketInfoRequest = await fetch(NETWORK_URL + '/market')
+  let marketInfo = await marketInfoRequest.json()
+  // console.log(marketInfo)
+  return marketInfo
+}
+
+async function getPast24HoursTokenInformation() {
+  let past24HoursTokenInfoRequest = await fetch(NETWORK_URL + '/change24h')
+  let past24HoursTokenInfo = await past24HoursTokenInfoRequest.json()
+  //  console.log(past24HoursTokenInfo)
+  return past24HoursTokenInfo
+}
+
+export function getMarketInformation(info) {
+  if(info == 'AVAIL_TOKENS') {
+    return getSupportedTokens();
+  } else if (info == 'PRICE_INFO') {
+    return getPast24HoursTokenInformation();
+  }
+}
+
+
 export function startTrade(globalDrizzleState, globalDrizzle) {
     
     console.log("start trade start")

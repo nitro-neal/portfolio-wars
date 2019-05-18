@@ -17,10 +17,16 @@ class AssetSlider extends React.Component {
         return (
             <div>
                 {this.props.assets.map((asset) => {
-                    var computedValue = asset.currentPortfolioPercent;                    
+                    var computedValue = asset.newPortfolioPercent;
                     return (
                         <div key={asset.symbol} style={wrapperStyle}>
-                            {asset.symbol} => {Math.round(asset.currentPortfolioPercent)}
+                            {asset.symbol} => {Math.round(asset.newPortfolioPercent)}
+                            <p>OLD PERCENT: {Math.round(asset.currentPortfolioPercent)} </p>
+                            <p>NEW PERCENT: {Math.round(asset.newPortfolioPercent)} </p>
+                            <p>AMOUNT: {asset.amount}</p>
+                            <p>PRICE PER ASSET: {asset.pricePerAsset} </p>
+                            <p>USD VALUE: {asset.usdValue} </p>
+                            <p>NEW USD VALUE: {asset.newPercentUsdValue} </p>
                             <Slider min={0} max={100} defaultValue={5} value = {computedValue} onChange={(e) => this.props.changeSlider(asset,e)} onAfterChange={console.log('on after change')}/>
                         </div>
                     );
