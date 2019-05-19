@@ -8,51 +8,78 @@ const REF_ADDRESS = "0x483C5100C3E544Aef546f72dF4022c8934a6945E";
 //var globalDrizzle;
 //var globalDrizzleState;
 
-var symbolAddressMap = new Map();
-symbolAddressMap.set("DAI", "0xaD6D458402F60fD3Bd25163575031ACDce07538D".toLowerCase());
-symbolAddressMap.set("BAT", "0xDb0040451F373949A4Be60dcd7b6B8D6E42658B6".toLowerCase());
+// var symbolAddressMap = new Map();
+// symbolAddressMap.set("DAI", "0xaD6D458402F60fD3Bd25163575031ACDce07538D".toLowerCase());
+// symbolAddressMap.set("BAT", "0xDb0040451F373949A4Be60dcd7b6B8D6E42658B6".toLowerCase());
 
 
-async function mainStart(globalDrizzleState, globalDrizzle) {
+async function mainStart(globalDrizzleState, globalDrizzle, trades) {
 
-  var rawTxOne = await main("DAI", "BAT", globalDrizzleState.accounts[0], 11, globalDrizzle);
-  var rawTxTwo = await main("DAI", "BAT", globalDrizzleState.accounts[0], 13, globalDrizzle);
+  var tokenContracts = await getSupportedTokens();
+  var rawTxs = [];
+
+  for(var i = 0; i < trades.length; i ++) {
+    // var rawTx = await main("DAI", "BAT", globalDrizzleState.accounts[0], 11, globalDrizzle);
+    console.log('FROM')
+    console.log(trades[i].from)
+    console.log('TO')
+    console.log(trades[i].to)
+    console.log('SELL TOKEN ADDRESS')
+    console.log(trades[i].fromAddress);
+    console.log('BUY TOKEN ADDRESS')
+    console.log(trades[i].toAddress)
+    console.log('AMOUNT')
+    console.log(trades[i].amount)
+    var rawTx = await main(trades[i].from, trades[i].to, trades[i].fromAddress, trades[i].toAddress, globalDrizzleState.accounts[0], trades[i].amount, globalDrizzle);
+    rawTxs.push(rawTx);
+  }
+
+  myBatchSendTranscation(rawTxs, globalDrizzle);
+
+
+
+  // var rawTxOne = await main("DAI", "BAT", globalDrizzleState.accounts[0], 11, globalDrizzle);
+  // var rawTxTwo = await main("DAI", "BAT", globalDrizzleState.accounts[0], 13, globalDrizzle);
   
 
-  var rawTxs = [];
-  rawTxs.push(rawTxOne);
-  rawTxs.push(rawTxTwo);
-  myBatchSendTranscation(rawTxs, globalDrizzle);
+  // var rawTxs = [];
+  // rawTxs.push(rawTxOne);
+  // rawTxs.push(rawTxTwo);
+  // myBatchSendTranscation(rawTxs, globalDrizzle);
 }
 
-async function main(sellToken, buyToken, userAddress, amountToSell, globalDrizzle) {
+async function main(sellToken, buyToken, sellTokenAddress, buyTokenAddress, userAddress, amountToSell, globalDrizzle) {
 
 // bat is sell
 // dai is buy..
 
   //Step 1: If either token is not supported, quit
-  if (! await isTokenSupported(symbolAddressMap.get(sellToken)) || ! await isTokenSupported(symbolAddressMap.get(buyToken))) {
+  if (! await isTokenSupported(sellTokenAddress) || ! await isTokenSupported(buyTokenAddress)) {
     console.log("token not supported")
     return;
   }
   
   //Step 2: Check if BAT token is enabled
-  if(! await isTokenEnabledForUser(symbolAddressMap.get(sellToken), userAddress)) {
+  if(! await isTokenEnabledForUser(sellTokenAddress, userAddress)) {
     console.log("token not enabled! Enabling..")
-    await enableTokenTransfer(symbolAddressMap.get(sellToken), userAddress, GAS_PRICE, globalDrizzle);
+    if(sellToken == 'ETH') {
+      console.log('SELL TOKEN IS ETH SO SKIPPING ENABLE..')
+    } else {
+      await enableTokenTransfer(sellTokenAddress, userAddress, GAS_PRICE, globalDrizzle);
+    }
   }
 
   //Step 4: Get expected ETH qty from selling 100 BAT tokens
-  let sellQty = await getSellQty(symbolAddressMap.get(sellToken), amountToSell);
+  let sellQty = await getSellQty(sellTokenAddress, amountToSell);
 
   //Step 5: Get approximate DAI tokens receivable, set it to be minDstQty
-  let buyQty = await getApproximateBuyQty(symbolAddressMap.get(buyToken));
+  let buyQty = await getApproximateBuyQty(buyTokenAddress);
   let minDstQty = await getApproximateReceivableTokens(sellQty,buyQty, amountToSell);
   console.log("perform trade buyQty: " + buyQty + " and minDstQty: " + minDstQty);
 
   console.log("Getting raw tx");
   //Step 6: Perform the BAT -> DAI trade
-  let rawTx = await executeTrade(userAddress,symbolAddressMap.get(sellToken),symbolAddressMap.get(buyToken),amountToSell,minDstQty,GAS_PRICE,REF_ADDRESS);
+  let rawTx = await executeTrade(userAddress,sellTokenAddress,buyTokenAddress,amountToSell,minDstQty,GAS_PRICE,REF_ADDRESS);
   console.log(rawTx);
   return rawTx;
 }
@@ -79,8 +106,12 @@ async function isTokenEnabledForUser(tokenAddress,walletAddress) {
 }
 
 async function enableTokenTransfer(tokenAddress,walletAddress,gasPrice, globalDrizzle) {
+  // TODO: FIX THIS!
+  console.log('hitting endpoint: ' + NETWORK_URL + '/users/' + walletAddress + '/currencies/' + tokenAddress + '/enable_data?gas_price=' + gasPrice)
   let enableTokenDetailsRequest = await fetch(NETWORK_URL + '/users/' + walletAddress + '/currencies/' + tokenAddress + '/enable_data?gas_price=' + gasPrice);
   let enableTokenDetails = await enableTokenDetailsRequest.json();
+  console.log('DETAILS')
+  console.log(enableTokenDetails);
   let rawTx = enableTokenDetails.data;
 
   // This maybe needs to be different..
@@ -90,7 +121,7 @@ async function enableTokenTransfer(tokenAddress,walletAddress,gasPrice, globalDr
 // good example - https://github.com/ethereum/web3.js/issues/1125
 async function mySendTranscation(rawTx, globalDrizzle) {
 
-    console.log("about to sign rawTx:");
+    console.log("about to sign rawTx NOT BATCH:");
     console.log(rawTx);
     var txReceipt = await globalDrizzle.web3.eth.sendTransaction(rawTx);
     console.log("result" + JSON.stringify(txReceipt));
@@ -186,9 +217,9 @@ export function getMarketInformation(info) {
 }
 
 
-export function startTrade(globalDrizzleState, globalDrizzle) {
+export function startTrade(globalDrizzleState, globalDrizzle, trades) {
     
     console.log("start trade start")
-    mainStart(globalDrizzleState, globalDrizzle);
+    mainStart(globalDrizzleState, globalDrizzle, trades);
     console.log("start trade end")
 }

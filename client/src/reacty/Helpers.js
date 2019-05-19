@@ -39,19 +39,24 @@ export function computeTrades(stateAssets) {
                 var trade = {};
                 trade.from = assets[i].symbol;
                 trade.to = assets[j].symbol;
+                trade.fromAddress = assets[i].tokenAddress;
+                trade.toAddress = assets[j].tokenAddress;
                 // we need to pour money from negative to positive
                 var negativeAmountLeftToGive = assets[i].usdNeeded + assets[j].usdNeeded;
 
                 // still more to give, other is 0
                 if(negativeAmountLeftToGive <= 0) {
-                    trade.amount = assets[j].usdNeeded;
+                    trade.usdAmount = assets[j].usdNeeded;
+                    // amount in from coin..
+                    trade.amount = assets[j].usdNeeded / assets[i].pricePerAsset;
                     assets[i].usdNeeded = negativeAmountLeftToGive;
                     assets[j].usdNeeded = 0;
                 }
 
                 // we gave it all
                 if(negativeAmountLeftToGive > 0) {
-                    trade.amount = Math.abs(assets[i].usdNeeded)
+                    trade.usdAmount = Math.abs(assets[i].usdNeeded)
+                    trade.amount = Math.abs(assets[i].usdNeeded) / assets[i].pricePerAsset;
                     assets[i].usdNeeded = 0;
                     assets[j].usdNeeded = negativeAmountLeftToGive;   
                 }
@@ -63,6 +68,7 @@ export function computeTrades(stateAssets) {
     }
 
     console.log(trades);
+    return trades;
 }
 
 // function sellToPercentage(percentToSellTo, currentAsset, assets) {
@@ -144,7 +150,7 @@ export function getCurrentAssets(drizzle, drizzleState, tokenContractsJson, supp
     //var pricePerAsset = recentCoinPricesMap.get('ETH');
     var pricePerAsset = tokenPriceInfo['ETH_ETH'].rate_usd_now
 
-    var ethAsset =  {"symbol" : "ETH", "amount" : ethBalance, "pricePerAsset":pricePerAsset, "usdValue": pricePerAsset * ethBalance, "newPercentUsdValue": pricePerAsset * ethBalance, "currentPortfolioPercent" : -1, "newPortfolioPercent" : -1}
+    var ethAsset =  {"symbol" : "ETH", "tokenAddress" :  tokenPriceInfo['ETH_ETH'].token_address, "amount" : ethBalance, "pricePerAsset":pricePerAsset, "usdValue": pricePerAsset * ethBalance, "newPercentUsdValue": pricePerAsset * ethBalance, "currentPortfolioPercent" : -1, "newPortfolioPercent" : -1}
 
     that.addAsset(ethAsset);
 
@@ -183,7 +189,7 @@ function web3Call(drizzle, drizzleState, symbol,symbolTokenAddress,tokenContract
                 // var pricePerAsset = recentCoinPricesMap.get(symbol);
                 var ppatoken = 'ETH_' + symbol;
                 var pricePerAsset = tokenPriceInfo[ppatoken].rate_usd_now
-                var asset =  {"symbol" : symbol, "amount" : assetBalance, "pricePerAsset":pricePerAsset, "usdValue": pricePerAsset * assetBalance, "newPercentUsdValue": pricePerAsset * assetBalance, "currentPortfolioPercent" : -1, "newPortfolioPercent" : -1}
+                var asset =  {"symbol" : symbol, "tokenAddress" :  tokenPriceInfo[ppatoken].token_address, "amount" : assetBalance, "pricePerAsset":pricePerAsset, "usdValue": pricePerAsset * assetBalance, "newPercentUsdValue": pricePerAsset * assetBalance, "currentPortfolioPercent" : -1, "newPortfolioPercent" : -1}
 
                 that.addAsset(asset);
             }
