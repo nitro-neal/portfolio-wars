@@ -21,6 +21,7 @@ class AssetSlider extends React.Component {
                     return (
                         <div key={asset.symbol} style={wrapperStyle}>
                             {asset.symbol} => {Math.round(asset.newPortfolioPercent)}
+                            <p>{asset.tokenName}</p>
                             <p>OLD PERCENT: {Math.round(asset.currentPortfolioPercent)} </p>
                             <p>NEW PERCENT: {Math.round(asset.newPortfolioPercent)} </p>
                             <p>AMOUNT: {asset.amount}</p>

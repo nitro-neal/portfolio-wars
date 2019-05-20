@@ -1,31 +1,24 @@
 import React from 'react';
 
 import ShowPieChart from './PieChart';
-import coinPricesJson from "./../coinmarketcap-2018-7-31-19.json"
-// import tokenContractsJson from "./../tokens.json";
-import tokenContractsJson from "./../testnetTokens.json";
-
-import {getCoinPrices, getCurrentAssets, computeTrades} from "./Helpers"
+import {getCurrentAssets, computeTrades} from "./Helpers"
 import {startTrade, getMarketInformation} from "./KyberInterface"
 import AssetSlider from './AssetSlider';
 
-
-//https://codesandbox.io/s/9o3l3pr1np?from-embed
-// could do maticnetwork integration too -  https://github.com/maticnetwork/matic.js
-
 var globalPriceInfo = {};
 
-async function getInfo() {
-
+async function fetchPriceInfo() {
   var supportedTokens = await getMarketInformation('AVAIL_TOKENS');
   var tokenPriceInfo = await getMarketInformation('PRICE_INFO');
 
-  globalPriceInfo = tokenPriceInfo;
+  console.log('Supported tokens: ');
+  console.log(supportedTokens)
 
-  var info = []
-  info.push(supportedTokens);
-  info.push(tokenPriceInfo);
-  return info;
+  console.log('Price info: ');
+  console.log(tokenPriceInfo)
+
+  globalPriceInfo = tokenPriceInfo;
+  return tokenPriceInfo;
 }
 
 class PortfolioContainer extends React.Component {
@@ -35,37 +28,20 @@ class PortfolioContainer extends React.Component {
       this.state = {
         assets: [],
         totalUsdValue: 0,
-        // coinPricesMap : {},
+        tradeComplete : 0,
         drizzle : {},
         drizzleState : {}
       }
     }
     
-    
     componentDidMount() {
         const { drizzle, drizzleState } = this.props;
         this.setState({ drizzle: drizzle });
         this.setState({ drizzleState: drizzleState });
-
-        // var recentCoinPricesMap = getCoinPrices(coinPricesJson);
-        // var supportedTokens = getMarketInformation('AVAIL_TOKENS');
-        // var tokenPriceInfo = await getMarketInformation('PRICE_INFO');
-
-        getInfo().then(info => getCurrentAssets(drizzle, drizzleState, tokenContractsJson, info[0], info[1], this))
-        // console.log(supportedTokens);
-        // console.log(tokenPriceInfo);
-
-        // this.setState({coinPricesMap :recentCoinPricesMap })
-
-        // console.log("DEBUG? " + recentCoinPricesMap.get('ETH'));
-        
-        // getCurrentAssets(drizzle, drizzleState, tokenContractsJson, recentCoinPricesMap, this)
+        fetchPriceInfo().then(priceInfo => getCurrentAssets(drizzle, drizzleState, priceInfo, this))   
     }
 
-    
-
     addAsset(asset) {
-        console.log('add asset called')
         this.computeNewPercentages(asset)
     }
 
@@ -88,8 +64,6 @@ class PortfolioContainer extends React.Component {
     }
 
     changeSlider = (asset, value) => {
-        console.log('SLIDER CHANGE ' + asset.symbol + ' event ' + value);
-
         // needed so it doesn't 'jump'
         asset.newPortfolioPercent = value;
 
@@ -107,45 +81,41 @@ class PortfolioContainer extends React.Component {
         }
 
         asset.newPercentUsdValue = totalUsdValue * (asset.newPortfolioPercent * .01)
-        // This is needed, but not sure why..
+        // this is needed, but not sure why..
         this.setState({ assets: this.state.assets });
     }
 
     startKyberTrade = () => {
-      console.log('trade start button clicked');
       var trades = computeTrades(this.state.assets);
-      console.log('TRADES PASSED THROUGH');
+      console.log('Performing trades: ');
       console.log(trades)
-      startTrade(this.state.drizzleState, this.state.drizzle, trades);
+      startTrade(this.state.drizzleState, this.state.drizzle, this.tradeCompleteCallback, trades);
     }
 
     handleKeyDown = e => {
-      // if the enter key is pressed, set the value with the string
       if (e.keyCode === 13) {
-        
         var token = 'ETH_' + e.target.value;
         var asset =  {"symbol" : e.target.value, "tokenAddress" :  globalPriceInfo[token].token_address, "amount" : 0, "pricePerAsset":globalPriceInfo[token].rate_usd_now, "usdValue": 0, "newPercentUsdValue": 0, "currentPortfolioPercent" : 0, "newPortfolioPercent" : 0}
         this.addAsset(asset)
-
-        // var newElement =                
-        //  {
-        //   "id":this.state.sliderData.length,
-        //   "symbol":e.target.value,
-        //   "value":5
-        //   };
-
-        // this.setState({ sliderData: [...this.state.sliderData, newElement] });
-        
-        // TODO ADD COMPONENT HERE
-        //this.sliderStates.push({})
       }
     };
 
+    tradeCompleteCallback = hash => {
+      console.log('TRADE COMPLETE');
+      console.log(hash);
+      this.setState({tradeComplete : 1})
+    }
+
     render() {
+      var tradesComplete = false;
+      if(this.state.tradeComplete != 0) {
+        tradesComplete = true;
+      }
       return (
         <div>
-          <h3> Portfolio Container  </h3>
-          <p>Total USD Value: {this.state.totalUsdValue}</p>
+          {tradesComplete == true && <h2>Trade Complete!</h2>}
+          <h3> Portfolio Container </h3>          
+          <p> Total USD Value: {this.state.totalUsdValue} </p>
           <ShowPieChart assets = {this.state.assets} />
           <input type="text" onKeyDown={this.handleKeyDown} />
           <AssetSlider changeSlider = {this.changeSlider} assets = {this.state.assets} />

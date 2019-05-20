@@ -11,6 +11,7 @@ class ShowPieChart extends React.Component {
     this.colorMap.set('ETH', 'grey');
     this.colorMap.set('BAT', 'red');
     this.colorMap.set('DAI', 'yellow');
+    this.colorMap.set('OMG','blue');
   }
 
   render() {
@@ -41,17 +42,11 @@ class ShowPieChart extends React.Component {
       }
     }
 
-    // var slices: {
-    //   0: { color: 'yellow' },
-    //   1: { color: 'transparent' }
-    // };
-    
-    
     return (
       <div>
         <Chart
-          width={'500px'}
-          height={'300px'}
+          width={'600px'}
+          height={'400px'}
           chartType="PieChart"
           loader={<div>Loading Chart</div>}
           data={pieChartData}
@@ -67,7 +62,10 @@ class ShowPieChart extends React.Component {
                 4: { color: colors[4] },
                 5: { color: colors[5] },
                 6: { color: colors[6] },
-                7: { color: colors[7] }
+                7: { color: colors[7] },
+                8: { color: colors[8] },
+                9: { color: colors[9] },
+                10: { color: colors[10] }
               }
           }}
           rootProps={{ 'data-testid': '1' }}

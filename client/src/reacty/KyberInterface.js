@@ -2,64 +2,34 @@ const fetch = require('node-fetch');
 
 const NETWORK_URL = "https://ropsten-api.kyber.network";
 const GAS_PRICE = "medium";
-// TODO: Add Ref Address
-const REF_ADDRESS = "0x483C5100C3E544Aef546f72dF4022c8934a6945E";
+const REF_ADDRESS = "0x16591D6eD1101dF43c46a027835C0717191Fb147";
 
-//var globalDrizzle;
-//var globalDrizzleState;
-
-// var symbolAddressMap = new Map();
-// symbolAddressMap.set("DAI", "0xaD6D458402F60fD3Bd25163575031ACDce07538D".toLowerCase());
-// symbolAddressMap.set("BAT", "0xDb0040451F373949A4Be60dcd7b6B8D6E42658B6".toLowerCase());
-
+var tradeCompleteCallback = {};
 
 async function mainStart(globalDrizzleState, globalDrizzle, trades) {
-
-  var tokenContracts = await getSupportedTokens();
   var rawTxs = [];
 
   for(var i = 0; i < trades.length; i ++) {
-    // var rawTx = await main("DAI", "BAT", globalDrizzleState.accounts[0], 11, globalDrizzle);
-    console.log('FROM')
-    console.log(trades[i].from)
-    console.log('TO')
-    console.log(trades[i].to)
-    console.log('SELL TOKEN ADDRESS')
-    console.log(trades[i].fromAddress);
-    console.log('BUY TOKEN ADDRESS')
-    console.log(trades[i].toAddress)
-    console.log('AMOUNT')
-    console.log(trades[i].amount)
+    console.log('Gettin tx for trade:')
+    console.log(trades[i].from + ' => ' + trades[i].to + ': ' + trades[i].amount)
+
     var rawTx = await main(trades[i].from, trades[i].to, trades[i].fromAddress, trades[i].toAddress, globalDrizzleState.accounts[0], trades[i].amount, globalDrizzle);
     rawTxs.push(rawTx);
   }
 
   myBatchSendTranscation(rawTxs, globalDrizzle);
-
-
-
-  // var rawTxOne = await main("DAI", "BAT", globalDrizzleState.accounts[0], 11, globalDrizzle);
-  // var rawTxTwo = await main("DAI", "BAT", globalDrizzleState.accounts[0], 13, globalDrizzle);
-  
-
-  // var rawTxs = [];
-  // rawTxs.push(rawTxOne);
-  // rawTxs.push(rawTxTwo);
-  // myBatchSendTranscation(rawTxs, globalDrizzle);
 }
 
 async function main(sellToken, buyToken, sellTokenAddress, buyTokenAddress, userAddress, amountToSell, globalDrizzle) {
 
-// bat is sell
-// dai is buy..
-
+  // TODO: I can remove this to save time..
   //Step 1: If either token is not supported, quit
   if (! await isTokenSupported(sellTokenAddress) || ! await isTokenSupported(buyTokenAddress)) {
     console.log("token not supported")
     return;
   }
   
-  //Step 2: Check if BAT token is enabled
+  //Step 2: Check if token is enabled
   if(! await isTokenEnabledForUser(sellTokenAddress, userAddress)) {
     console.log("token not enabled! Enabling..")
     if(sellToken == 'ETH') {
@@ -74,10 +44,9 @@ async function main(sellToken, buyToken, sellTokenAddress, buyTokenAddress, user
 
   //Step 5: Get approximate DAI tokens receivable, set it to be minDstQty
   let buyQty = await getApproximateBuyQty(buyTokenAddress);
-  let minDstQty = await getApproximateReceivableTokens(sellQty,buyQty, amountToSell);
-  console.log("perform trade buyQty: " + buyQty + " and minDstQty: " + minDstQty);
+  let minDstQty = await getApproximateReceivableTokens(sellQty, buyQty, amountToSell);
+  console.log("Perform trade with buyQty: " + buyQty + " and minDstQty: " + minDstQty);
 
-  console.log("Getting raw tx");
   //Step 6: Perform the BAT -> DAI trade
   let rawTx = await executeTrade(userAddress,sellTokenAddress,buyTokenAddress,amountToSell,minDstQty,GAS_PRICE,REF_ADDRESS);
   console.log(rawTx);
@@ -94,7 +63,7 @@ async function isTokenSupported(tokenAddress) {
     return tokenSupported;
 }
 
-async function isTokenEnabledForUser(tokenAddress,walletAddress) {
+async function isTokenEnabledForUser(tokenAddress, walletAddress) {
   let enabledStatusesRequest = await fetch(NETWORK_URL + '/users/' + walletAddress + '/currencies');
   let enabledStatuses = await enabledStatusesRequest.json();
   for (var i=0; i < enabledStatuses.data.length; i++) {
@@ -107,35 +76,37 @@ async function isTokenEnabledForUser(tokenAddress,walletAddress) {
 
 async function enableTokenTransfer(tokenAddress,walletAddress,gasPrice, globalDrizzle) {
   // TODO: FIX THIS!
-  console.log('hitting endpoint: ' + NETWORK_URL + '/users/' + walletAddress + '/currencies/' + tokenAddress + '/enable_data?gas_price=' + gasPrice)
+  console.log('Enabling token.. hitting endpoint: ' + NETWORK_URL + '/users/' + walletAddress + '/currencies/' + tokenAddress + '/enable_data?gas_price=' + gasPrice)
   let enableTokenDetailsRequest = await fetch(NETWORK_URL + '/users/' + walletAddress + '/currencies/' + tokenAddress + '/enable_data?gas_price=' + gasPrice);
   let enableTokenDetails = await enableTokenDetailsRequest.json();
-  console.log('DETAILS')
-  console.log(enableTokenDetails);
+
+  if(enableTokenDetails.error) {
+    console.log('Error in enabling token transfer: ')
+    console.log(enableTokenDetails);
+  }
+
   let rawTx = enableTokenDetails.data;
 
-  // This maybe needs to be different..
   await mySendTranscation(rawTx, globalDrizzle);
 }
 
 // good example - https://github.com/ethereum/web3.js/issues/1125
 async function mySendTranscation(rawTx, globalDrizzle) {
-
-    console.log("about to sign rawTx NOT BATCH:");
+    console.log("About to sign rawTx NOT BATCH:");
     console.log(rawTx);
     var txReceipt = await globalDrizzle.web3.eth.sendTransaction(rawTx);
     console.log("result" + JSON.stringify(txReceipt));
 }
 
 async function myBatchSendTranscation(rawTxs, globalDrizzle) {
-  console.log("about to sign BATCH rawTx:");
+  console.log("About to sign BATCH rawTx:");
   console.log(rawTxs);
 
   const batch = new globalDrizzle.web3.BatchRequest();
 
   for(var i = 0; i < rawTxs.length; i++) {
-    // THIS WORKS
-    batch.add(globalDrizzle.web3.eth.sendTransaction(rawTxs[i], callBack))
+    // batch.add(globalDrizzle.web3.eth.sendTransaction(rawTxs[i], callBack).on('receipt', receipt => console.log('MY CALLBACK receipt', receipt)))
+    batch.add(globalDrizzle.web3.eth.sendTransaction(rawTxs[i], callBack).on('receipt', receipt => tradeCompleteCallback(receipt)))
   }
 
   console.log("BEFORE BATCH EXECUTE");
@@ -144,15 +115,21 @@ async function myBatchSendTranscation(rawTxs, globalDrizzle) {
   } catch (e) {
       // TODO: Fix this..
     console.log("Catching error for now...")
+    //console.log(e)
   }
 
   console.log("AFTER BATCH EXECUTE");
 }
 
 function callBack(error, hash) {
-  // const totalTokens = web3.utils.toBN(result).toString();
-  // const balance = web3.utils.fromWei(totalTokens, "ether");
-  console.log("result", hash);
+  console.log("callback result", hash);
+
+  // (async function() {
+  //   var txHash = hash;
+  //   console.log('waiting for transaction for hash: ' + hash);
+  //   const minedTxReceipt = await awaitTransactionMined.awaitTx(globalWeb3, txHash);
+  //   console.log('Transaction mined: ' + minedTxReceipt);
+  // })();
 }
 
 async function getSellQty(tokenAddress, qty) {
@@ -170,10 +147,7 @@ async function getApproximateBuyQty(tokenAddress) {
   return approximateBuyQty;
 }
 
-//sellQty = output from getSellQty function
-//buyQty = output from getApproximateBuyQty function
-//srcQty = token qty amount to swap from (100 BAT tokens in scenario)
-async function getApproximateReceivableTokens(sellQty,buyQty,srcQty) {
+async function getApproximateReceivableTokens(sellQty, buyQty, srcQty) {
   let expectedAmountWithoutSlippage = buyQty / sellQty * srcQty;
   let expectedAmountWithSlippage = 0.97 * expectedAmountWithoutSlippage;
   return expectedAmountWithSlippage;
@@ -197,14 +171,12 @@ async function getSupportedTokens() {
 async function getMarketInfo() {
   let marketInfoRequest = await fetch(NETWORK_URL + '/market')
   let marketInfo = await marketInfoRequest.json()
-  // console.log(marketInfo)
   return marketInfo
 }
 
 async function getPast24HoursTokenInformation() {
   let past24HoursTokenInfoRequest = await fetch(NETWORK_URL + '/change24h')
   let past24HoursTokenInfo = await past24HoursTokenInfoRequest.json()
-  //  console.log(past24HoursTokenInfo)
   return past24HoursTokenInfo
 }
 
@@ -217,9 +189,11 @@ export function getMarketInformation(info) {
 }
 
 
-export function startTrade(globalDrizzleState, globalDrizzle, trades) {
-    
-    console.log("start trade start")
+export function startTrade(globalDrizzleState, globalDrizzle, tradeCallback, trades) {
+  
+    tradeCompleteCallback = tradeCallback;
+
+    console.log("Start trade start")
     mainStart(globalDrizzleState, globalDrizzle, trades);
-    console.log("start trade end")
+    console.log("Start trade end")
 }
