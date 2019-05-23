@@ -18,7 +18,7 @@ export function computeTrades(stateAssets) {
 
         for(var j = 0; j < assets.length; j++) {
 
-            if(assets[i].usdNeeded < 0 && assets[j].usdNeeded > 0 && assets[i].symbol != assets[j].symbol) {
+            if(assets[i].usdNeeded < 0 && assets[j].usdNeeded > 0 && assets[i].symbol !== assets[j].symbol) {
 
                 var trade = {};
                 trade.from = assets[i].symbol;

@@ -1,9 +1,15 @@
-import React from 'react';
 
+import 'rc-slider/assets/index.css';
+import 'rc-tooltip/assets/bootstrap.css';
+
+import React from 'react';
+import Button from 'react-bootstrap/Button';
 import ShowPieChart from './PieChart';
 import {getCurrentAssets, computeTrades} from "./Helpers"
 import {startTrade, getMarketInformation} from "./KyberInterface"
 import AssetSlider from './AssetSlider';
+// import MyAutosuggest from './MyAutosuggest'
+
 
 var globalPriceInfo = {};
 
@@ -38,7 +44,13 @@ class PortfolioContainer extends React.Component {
         const { drizzle, drizzleState } = this.props;
         this.setState({ drizzle: drizzle });
         this.setState({ drizzleState: drizzleState });
-        fetchPriceInfo().then(priceInfo => getCurrentAssets(drizzle, drizzleState, priceInfo, this))   
+        this.setState({ currentState: 'INIT' });
+
+        if(Object.entries(drizzleState.accounts).length === 0 )    {
+          this.setState({ currentState: 'NO_ACCOUNT' });
+        } else {
+          fetchPriceInfo().then(priceInfo => getCurrentAssets(drizzle, drizzleState, priceInfo, this))   
+        }
     }
 
     addAsset(asset) {
@@ -107,21 +119,34 @@ class PortfolioContainer extends React.Component {
     }
 
     render() {
+      var center = {"textAlign": "center"}
+      var padding = {"paddingTop" : "20px", "textAlign": "center"}
+
       var tradesComplete = false;
-      if(this.state.tradeComplete != 0) {
+      if(this.state.tradeComplete !== 0) {
         tradesComplete = true;
       }
+
+      if(this.state.currentState === 'NO_ACCOUNT') {
+        return (<p>Please install a web3 provitor like metamask</p>)
+      }
+
       return (
-        <div>
-          {tradesComplete == true && <h2>Trade Complete!</h2>}
-          <h3> Portfolio Container </h3>          
-          <p> Total USD Value: {this.state.totalUsdValue} </p>
+        <div className="container4">
+          {tradesComplete === true && <h2>Trade Complete!</h2>}
+          <h2 className="titletext"> Easy Portfolio </h2>          
+          <h4 className ="herotext"> Total USD Value: {Math.round(this.state.totalUsdValue)} </h4>
           <ShowPieChart assets = {this.state.assets} />
-          <input type="text" onKeyDown={this.handleKeyDown} />
+
+          <div style = {center}>
+            <input style = {center} type="text" onKeyDown={this.handleKeyDown} />
+          {/* <MyAutosuggest onKeyDown={this.handleKeyDown}/> */}
+          </div>
+          
           <AssetSlider changeSlider = {this.changeSlider} assets = {this.state.assets} />
-          <button onClick={this.startKyberTrade}>
-            Start Trade!
-          </button>
+          <div style = {padding}>
+            <Button onClick={this.startKyberTrade} className="btn btn-info">Start Trade</Button>
+          </div>
         </div>
       )
     }

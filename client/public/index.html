@@ -3,6 +3,64 @@
   <head>
     <meta charset="utf-8" />
     <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
+
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+
+    <style>
+      .mystyle {
+        color:white;
+        background-color: #333;
+        font-family: open-sans,sans-serif;
+        font-size: 14px;
+      }
+
+      div.container4 h2, h4 {
+        left: 50%;
+        text-align: center;
+        
+      }
+        
+    /* div.container4 p {
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-right: -50%;
+        transform: translate(-50%, -50%) 
+    } */
+
+      .titletext {
+        color: #fff;
+        font-size: 37px;
+        font-weight: 600;
+        line-height: 45px;
+        padding-top: 40px;
+        text-transform: capitalize;
+        text-shadow: 5px 6px 10px rgba(0, 0, 0, 0.4);
+      }
+
+      .herotext {
+          color: #fff;
+          font-size: 16px;
+          font-weight: 400;
+          letter-spacing: 1px;
+          padding-bottom: 5px;
+          padding-top: 5px;
+          text-transform: capitalize;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+    </style>
+    
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, shrink-to-fit=no"
@@ -24,7 +82,7 @@
     -->
     <title>React App</title>
   </head>
-  <body>
+  <body class="mystyle">
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <!--
@@ -37,5 +95,21 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
+
+    <!-- was throwing error -->
+    <!-- <script src="https://unpkg.com/react/umd/react.production.js" crossorigin />
+
+    <script
+      src="https://unpkg.com/react-dom/umd/react-dom.production.js"
+      crossorigin
+    />
+    
+    <script
+      src="https://unpkg.com/react-bootstrap@next/dist/react-bootstrap.min.js"
+      crossorigin
+    /> 
+    
+    <script>var Alert = ReactBootstrap.Alert;</script> -->
+
   </body>
 </html>

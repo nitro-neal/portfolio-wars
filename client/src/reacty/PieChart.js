@@ -1,5 +1,6 @@
 import React from 'react';
 import Chart from "react-google-charts";
+import {Container, Row, Col} from 'react-bootstrap';
 
 class ShowPieChart extends React.Component {
 
@@ -15,7 +16,7 @@ class ShowPieChart extends React.Component {
   }
 
   render() {
-    console.log("PIE CHART REDRAW");
+    
     var colors = []
     var assets = this.props.assets
     var pieChartData = 
@@ -24,8 +25,8 @@ class ShowPieChart extends React.Component {
       ];
 
     var totalPortfolioPercentage = 0;
-    for (var i = 0; i < assets.length; i ++) {
-      totalPortfolioPercentage += assets[i].newPortfolioPercent;
+    for (var iter = 0; iter < assets.length; iter ++) {
+      totalPortfolioPercentage += assets[iter].newPortfolioPercent;
     }
 
     if(totalPortfolioPercentage < 100) {
@@ -43,17 +44,24 @@ class ShowPieChart extends React.Component {
     }
 
     return (
+      
       <div>
+                                <Container>
+                            <Row>
+                              <Col sm={4}> </Col>
+                              <Col sm={4}>
         <Chart
-          width={'600px'}
-          height={'400px'}
+          // width={'600px'}
+          // height={'400px'}
           chartType="PieChart"
-          loader={<div>Loading Chart</div>}
+          loader={<div>Loading Chart..</div>}
           data={pieChartData}
           
           options={{
-              title: 'Current Portfolio',
-              pieHole: 0.4,
+              backgroundColor:'#333',
+              legend: 'none',
+              pieHole: 0.7,
+              pieSliceText: 'none',
               slices: {
                 0: { color: colors[0] },
                 1: { color: colors[1] },
@@ -70,6 +78,12 @@ class ShowPieChart extends React.Component {
           }}
           rootProps={{ 'data-testid': '1' }}
           />
+          </Col>
+
+          <Col sm={4}></Col>
+
+      </Row>
+      </Container>
       </div>
     )
   }

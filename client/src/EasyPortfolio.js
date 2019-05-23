@@ -2,7 +2,7 @@
 import 'rc-slider/assets/index.css';
 import 'rc-tooltip/assets/bootstrap.css';
 import React from "react";
-import Tooltip from 'rc-tooltip';
+// import Tooltip from 'rc-tooltip';
 import Slider from 'rc-slider';
 //import SimpleUtils from "./SimpleUtils";
 import { Chart } from "react-google-charts";
@@ -10,7 +10,7 @@ import { Chart } from "react-google-charts";
 import tokenContractsJson from "./testnetTokens.json";
 import coinPricesJson from "./coinmarketcap-2018-7-31-19.json"
 
-const Handle = Slider.Handle;
+// const Handle = Slider.Handle;
 const wrapperStyle = { width: 400, margin: 50 };
 
 
@@ -48,9 +48,9 @@ function MySlider(props) {
   );
 }
 
-function createNewAsset(symbol, amount, usdValue, currentPortfolioPercent, newPortfolioPercent) {
-  return {"symbol" : symbol, "amount" : amount, "usdValue": usdValue, "currentPortfolioPercent" : currentPortfolioPercent, "newPortfolioPercent" : newPortfolioPercent}
-}
+// function createNewAsset(symbol, amount, usdValue, currentPortfolioPercent, newPortfolioPercent) {
+//   return {"symbol" : symbol, "amount" : amount, "usdValue": usdValue, "currentPortfolioPercent" : currentPortfolioPercent, "newPortfolioPercent" : newPortfolioPercent}
+// }
 
 class EasyPortfolio extends React.Component {
 
@@ -172,7 +172,7 @@ class EasyPortfolio extends React.Component {
             <div> 
               {this.state.mydata.map(function(object, i, arr) {
 
-                if(i == 0) {
+                if(i === 0) {
                   return <p></p>
                 }
                 console.log('ARR? ' + arr);

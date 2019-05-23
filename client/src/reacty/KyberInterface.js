@@ -32,7 +32,7 @@ async function main(sellToken, buyToken, sellTokenAddress, buyTokenAddress, user
   //Step 2: Check if token is enabled
   if(! await isTokenEnabledForUser(sellTokenAddress, userAddress)) {
     console.log("token not enabled! Enabling..")
-    if(sellToken == 'ETH') {
+    if(sellToken === 'ETH') {
       console.log('SELL TOKEN IS ETH SO SKIPPING ENABLE..')
     } else {
       await enableTokenTransfer(sellTokenAddress, userAddress, GAS_PRICE, globalDrizzle);
@@ -56,7 +56,7 @@ async function main(sellToken, buyToken, sellTokenAddress, buyTokenAddress, user
 async function isTokenSupported(tokenAddress) {
   let tokensBasicInfoRequest = await fetch(NETWORK_URL + '/currencies');
   let tokensBasicInfo = await tokensBasicInfoRequest.json();
-    let tokenSupported = tokensBasicInfo.data.some(token => {return tokenAddress == token.id});
+    let tokenSupported = tokensBasicInfo.data.some(token => {return tokenAddress === token.id});
     if (!tokenSupported) {
         console.log('Token is not supported');
     }
@@ -68,7 +68,7 @@ async function isTokenEnabledForUser(tokenAddress, walletAddress) {
   let enabledStatuses = await enabledStatusesRequest.json();
   for (var i=0; i < enabledStatuses.data.length; i++) {
     var token = enabledStatuses.data[i];
-    if (token.id == tokenAddress) {
+    if (token.id === tokenAddress) {
       return token.enabled;
     }
   }
@@ -164,7 +164,6 @@ async function executeTrade(walletAddress,srcToken,dstToken,srcQty,minDstQty,gas
 async function getSupportedTokens() {
   let tokensBasicInfoRequest = await fetch(NETWORK_URL + '/currencies')
   let tokensBasicInfo = await tokensBasicInfoRequest.json()
-  console.log(tokensBasicInfo)
   return tokensBasicInfo;
 }
 
@@ -181,9 +180,9 @@ async function getPast24HoursTokenInformation() {
 }
 
 export function getMarketInformation(info) {
-  if(info == 'AVAIL_TOKENS') {
+  if(info === 'AVAIL_TOKENS') {
     return getSupportedTokens();
-  } else if (info == 'PRICE_INFO') {
+  } else if (info === 'PRICE_INFO') {
     return getPast24HoursTokenInformation();
   }
 }
